@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lumastudio.mapper.AssetMapper">
+
+    <insert id="insert">
+        INSERT INTO uploaded_asset (id, owner_user_id, original_filename, stored_path, public_url,
+                                    mime_type, size_bytes, width, height, created_at)
+        VALUES (#{id}, #{ownerUserId}, #{originalFilename}, #{storedPath}, #{publicUrl},
+                #{mimeType}, #{sizeBytes}, #{width}, #{height}, #{createdAt})
+    </insert>
+
+    <select id="findById" resultType="com.lumastudio.domain.UploadedAsset">
+        SELECT id, owner_user_id, original_filename, stored_path, public_url,
+               mime_type, size_bytes, width, height, created_at
+        FROM uploaded_asset
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByIdIn" resultType="com.lumastudio.domain.UploadedAsset">
+        SELECT id, owner_user_id, original_filename, stored_path, public_url,
+               mime_type, size_bytes, width, height, created_at
+        FROM uploaded_asset
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

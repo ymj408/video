@@ -1,0 +1,68 @@
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+spring:
+  application:
+    name: luma-studio-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/luma_studio?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${SPRING_DATASOURCE_USERNAME:luma}
+    password: ${SPRING_DATASOURCE_PASSWORD:luma_secret}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 12MB
+      max-request-size: 14MB
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 1h
+
+mybatis:
+  mapper-locations: classpath:mappers/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
+
+app:
+  storage:
+    upload-dir: ${UPLOAD_DIR:./data/uploads}
+    max-file-size-bytes: ${MAX_IMAGE_BYTES:10485760}
+  simulation:
+    step-delay-ms: ${SIMULATION_STEP_DELAY_MS:2500}
+    fail-stage: ${SIMULATION_FAIL_STAGE:NONE}
+    fail-next-only: ${SIMULATION_FAIL_NEXT_ONLY:true}
+    control-enabled: ${SIMULATION_CONTROL_ENABLED:true}
+  jobs:
+    core-pool-size: ${JOB_CORE_POOL_SIZE:2}
+    max-pool-size: ${JOB_MAX_POOL_SIZE:4}
+    queue-capacity: ${JOB_QUEUE_CAPACITY:100}
+  recovery:
+    fail-unfinished-on-startup: ${FAIL_UNFINISHED_ON_STARTUP:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.lumastudio: INFO
+    org.mybatis: WARN

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lumastudio.mapper.TemplateMapper">
+
+    <select id="findCategories" resultType="com.lumastudio.domain.TemplateCategory">
+        SELECT c.slug,
+               c.label,
+               c.sort_order,
+               COUNT(t.id) AS template_count
+        FROM template_category c
+                 LEFT JOIN creation_template t ON t.category_slug = c.slug
+        GROUP BY c.slug, c.label, c.sort_order
+        ORDER BY c.sort_order
+    </select>
+
+    <sql id="templateColumns">
+        SELECT t.id,
+               t.title,
+               t.category_slug,
+               c.label AS category_label,
+               t.description,
+               t.cover_url,
+               t.target_result_url,
+               t.required_image_count,
+               t.accepted_mime_types,
+               t.max_file_size_bytes,
+               t.featured,
+               t.sort_order,
+               t.created_at
+        FROM creation_template t
+                 JOIN template_category c ON c.slug = t.category_slug
+    </sql>
+
+    <select id="findAll" resultType="com.lumastudio.domain.CreationTemplate">
+        <include refid="templateColumns"/>
+        ORDER BY t.sort_order, t.id
+    </select>
+
+    <select id="findFeatured" resultType="com.lumastudio.domain.CreationTemplate">
+        <include refid="templateColumns"/>
+        WHERE t.featured = TRUE
+        ORDER BY t.sort_order, t.id
+    </select>
+
+    <select id="findByCategory" resultType="com.lumastudio.domain.CreationTemplate">
+        <include refid="templateColumns"/>
+        WHERE t.category_slug = #{category}
+        ORDER BY t.sort_order, t.id
+    </select>
+
+    <select id="findById" resultType="com.lumastudio.domain.CreationTemplate">
+        <include refid="templateColumns"/>
+        WHERE t.id = #{id}
+    </select>
+</mapper>

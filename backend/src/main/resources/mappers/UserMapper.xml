@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lumastudio.mapper.UserMapper">
+
+    <select id="findById" resultType="com.lumastudio.domain.AppUser">
+        SELECT id, display_name, email, avatar_color, plan_name, credits, created_at
+        FROM app_user
+        WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultType="com.lumastudio.domain.AppUser">
+        SELECT id, display_name, email, avatar_color, plan_name, credits, created_at
+        FROM app_user
+        ORDER BY CASE id
+                     WHEN 'usr_junpeng' THEN 1
+                     WHEN 'usr_mia' THEN 2
+                     ELSE 3
+                 END, display_name
+    </select>
+</mapper>

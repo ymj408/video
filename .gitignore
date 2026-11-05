@@ -1,0 +1,17 @@
+.tools/
+.pnpm-store/
+**/node_modules/
+**/.next/
+**/target/
+**/coverage/
+*.log
+.env
+.env.local
+data/
+backend/data/
+backend/target/
+frontend/.env*.local
+frontend/coverage/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lumastudio.mapper.JobMapper">
+
+    <insert id="insertJob">
+        INSERT INTO creation_job (id, user_id, template_id, template_title, template_cover_url,
+                                  status, stage, progress, asset_count, target_result_url,
+                                  result_url, failure_stage, failure_reason,
+                                  created_at, updated_at, started_at, finished_at)
+        VALUES (#{id}, #{userId}, #{templateId}, #{templateTitle}, #{templateCoverUrl},
+                #{status}, #{stage}, #{progress}, #{assetCount}, #{targetResultUrl},
+                #{resultUrl}, #{failureStage}, #{failureReason},
+                #{createdAt}, #{updatedAt}, #{startedAt}, #{finishedAt})
+    </insert>
+
+    <insert id="insertJobAsset">
+        INSERT INTO job_asset (job_id, asset_id, sort_order)
+        VALUES (#{jobId}, #{assetId}, #{sortOrder})
+    </insert>
+
+    <insert id="insertEvent">
+        INSERT INTO job_event (id, job_id, seq_no, stage, status, message, created_at)
+        VALUES (#{id}, #{jobId}, #{seqNo}, #{stage}, #{status}, #{message}, #{createdAt})
+    </insert>
+
+    <select id="nextEventSequence" resultType="int">
+        SELECT COALESCE(MAX(seq_no), 0) + 1
+        FROM job_event
+        WHERE job_id = #{jobId}
+    </select>
+
+    <select id="findById" resultType="com.lumastudio.domain.CreationJob">
+        SELECT *
+        FROM creation_job
+        WHERE id = #{id}
+    </select>
+
+    <select id="findForUser" resultType="com.lumastudio.domain.CreationJob">
+        SELECT *
+        FROM creation_job
+        WHERE user_id = #{userId}
+        <if test="templateId != null and templateId != ''">
+            AND template_id = #{templateId}
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findAssetRowsByJobIds" resultType="com.lumastudio.domain.JobAssetRow">
+        SELECT ja.job_id,
+               a.id,
+               a.owner_user_id,
+               a.original_filename,
+               a.stored_path,
+               a.public_url,
+               a.mime_type,
+               a.size_bytes,
+               a.width,
+               a.height,
+               ja.sort_order
+        FROM job_asset ja
+                 JOIN uploaded_asset a ON a.id = ja.asset_id
+        WHERE ja.job_id IN
+        <foreach collection="jobIds" item="jobId" open="(" separator="," close=")">
+            #{jobId}
+        </foreach>
+        ORDER BY ja.job_id, ja.sort_order
+    </select>
+
+    <select id="findEvents" resultType="com.lumastudio.domain.JobEvent">
+        SELECT id, job_id, seq_no, stage, status, message, created_at
+        FROM job_event
+        WHERE job_id = #{jobId}
+        ORDER BY seq_no
+    </select>
+
+    <update id="markProcessing">
+        UPDATE creation_job
+        SET status       = 'PROCESSING',
+            stage        = #{stage},
+            progress     = #{progress},
+            started_at   = COALESCE(started_at, #{now}),
+            updated_at   = #{now}
+        WHERE id = #{id}
+          AND status = 'QUEUED'
+    </update>
+
+    <update id="advanceStage">
+        UPDATE creation_job
+        SET stage    = #{stage},
+            progress = #{progress},
+            updated_at = #{now}
+        WHERE id = #{id}
+          AND status = 'PROCESSING'
+    </update>
+
+    <update id="markSucceeded">
+        UPDATE creation_job
+        SET status      = 'SUCCEEDED',
+            stage       = 'COMPLETED',
+            progress    = 100,
+            result_url  = #{resultUrl},
+            failure_stage = NULL,
+            failure_reason = NULL,
+            updated_at  = #{now},
+            finished_at = #{now}
+        WHERE id = #{id}
+          AND status = 'PROCESSING'
+    </update>
+
+    <update id="markFailed">
+        UPDATE creation_job
+        SET status         = 'FAILED',
+            stage          = 'FAILED',
+            failure_stage  = #{failureStage},
+            failure_reason = #{failureReason},
+            progress       = #{progress},
+            updated_at     = #{now},
+            finished_at    = #{now}
+        WHERE id = #{id}
+          AND status IN ('QUEUED', 'PROCESSING')
+    </update>
+
+    <delete id="deleteTerminalForUser">
+        DELETE FROM creation_job
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND status IN ('SUCCEEDED', 'FAILED')
+    </delete>
+
+    <update id="failUnfinishedOnStartup">
+        UPDATE creation_job
+        SET status         = 'FAILED',
+            stage          = 'FAILED',
+            failure_stage  = stage,
+            failure_reason = #{reason},
+            updated_at     = #{now},
+            finished_at    = #{now}
+        WHERE status IN ('QUEUED', 'PROCESSING')
+    </update>
+</mapper>

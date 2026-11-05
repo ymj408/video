@@ -1,0 +1,75 @@
+name: luma-studio
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-luma_studio}
+      MYSQL_USER: ${MYSQL_USER:-luma}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-luma_secret}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - luma_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-luma_studio}?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-luma}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-luma_secret}
+      UPLOAD_DIR: /app/uploads
+      SIMULATION_STEP_DELAY_MS: ${SIMULATION_STEP_DELAY_MS:-2500}
+      SIMULATION_FAIL_STAGE: ${SIMULATION_FAIL_STAGE:-NONE}
+      SIMULATION_FAIL_NEXT_ONLY: ${SIMULATION_FAIL_NEXT_ONLY:-true}
+      SIMULATION_CONTROL_ENABLED: ${SIMULATION_CONTROL_ENABLED:-true}
+      JOB_CORE_POOL_SIZE: ${JOB_CORE_POOL_SIZE:-2}
+      JOB_MAX_POOL_SIZE: ${JOB_MAX_POOL_SIZE:-4}
+      JOB_QUEUE_CAPACITY: ${JOB_QUEUE_CAPACITY:-100}
+      FAIL_UNFINISHED_ON_STARTUP: ${FAIL_UNFINISHED_ON_STARTUP:-true}
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - luma_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_ORIGIN: http://backend:8080
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      BACKEND_ORIGIN: http://backend:8080
+
+volumes:
+  luma_mysql:
+  luma_uploads:

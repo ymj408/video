@@ -269,7 +269,7 @@ pnpm build
 - 6 个分类：宠物、婚礼、节日、创意、风景、人像；API 额外生成「全部」「热门」两个虚拟筛选项。
 - 12 个模板，素材数量覆盖 1 / 2 / 3 张，所有模板接受 JPEG、PNG，单张上限 5 MB。
 - 12 张模板封面与 12 张成品示例图位于 `backend/src/main/resources/static/media/`。
-- 所有图片均由 `tools/generate_demo_assets.py` 使用 Pillow 程序化生成，**不依赖外部图库、付费资源或公司内部服务**。生成脚本保留了可复现的种子与绘制逻辑；如不需要重新生成，无需安装 Pillow。
+- 所有图片均由 `tools/generate_demo_assets.py` 使用 Pillow 程序化生成，**不依赖外部图库、付费资源或公司内部服务**。生成脚本保留了可复现的种子与绘制逻辑；如不需要重新生成，无需安装 Pillow。脚本当前使用 Windows 字体路径，在 Linux/macOS 重新生成时需调整 `FONT_DIR` 与字体常量。
 
 素材访问链路：
 

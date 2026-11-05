@@ -4,6 +4,8 @@
 
 制作过程**不调用真实 AI 服务**。后端按「素材检查 → 模拟生成 → 结果整理」三个独立阶段执行，通过可调整耗时与可指定阶段失败的确定性模拟器完成业务闭环。前端使用轮询跟踪未结束任务，并把「任务失败」与「查询接口暂时不可用」严格区分。
 
+远程仓库：<https://github.com/ymj408/video>
+
 ![模板列表](docs/screenshots/templates-1280.png)
 
 | 模板详情与后台任务 | 个人历史（处理中 / 成功 / 失败） |
@@ -708,7 +710,8 @@ cd backend && mvn test && mvn -DskipTests package
 - Frontend：`pnpm install --frozen-lockfile` → `pnpm lint` → `pnpm typecheck` → `pnpm test` → `pnpm build`
 - Backend：JDK 21 + Maven cache → `mvn -B -ntp verify`（测试 + 打包），并上传 surefire 报告
 
-> 该工作流文件已提供；由于验收环境未提供可用的 GitHub 远端，未在 GitHub Actions 上实际跑过。上述同一组命令已在本地逐条执行。
+> 远程仓库推送后 GitHub Actions 已实际执行并通过（Frontend / Backend 两个 job）。
+> 运行记录：<https://github.com/ymj408/video/actions/runs/41990511614>
 
 ---
 
@@ -795,7 +798,7 @@ docker compose up -d --build
 - **无分页**：历史接口最多返回 100 条，前端没有分页/加载更多。
 - **模拟状态仅内存**：运行时通过开发接口修改的耗时/失败阶段在服务重启后恢复环境变量配置。
 - **MySQL / Docker 未在本机实际跑通**：本机没有 Docker daemon，无法在本轮执行 `docker compose up --build`；Compose、Dockerfile、MySQL 迁移按静态检查编写。已在本地用 H2 `local` profile 完整跑通 API 与 UI（成功、失败、多任务、隔离），MySQL 路径需要在验收容器中实际启动确认。
-- **GitHub Actions 未实际触发**：本地等价命令全部通过；CI 文件已提供。
+- **GitHub Actions 已实际触发并通过**：Frontend 与 Backend job 均为 success，运行记录见 <https://github.com/ymj408/video/actions/runs/41990511614>。
 - Next.js 生产构建在本地 Windows 上使用了 Chrome 做视觉检查；未做额外的跨浏览器矩阵。
 - 上传文件上限和图片分辨率限制用于演示，没有做图片炸弹解码的完整资源配额治理。
 - 模拟生成只验证素材存在与基本类型，不实际读取图像像素生成成品。

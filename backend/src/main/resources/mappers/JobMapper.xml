@@ -135,8 +135,8 @@
     <update id="failUnfinishedOnStartup">
         UPDATE creation_job
         SET status         = 'FAILED',
-            stage          = 'FAILED',
             failure_stage  = stage,
+            stage          = 'FAILED',
             failure_reason = #{reason},
             updated_at     = #{now},
             finished_at    = #{now}
